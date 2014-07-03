@@ -32,6 +32,14 @@ public class ScreenStack {
 		}
 	}
 
+	public static void GUIDisplay()
+	{
+		if(tStack.Count > 0)
+		{
+			tStack[0].GUIDisplay();
+		}
+	}
+
 	public static void SetBackgroundCol(Color tCol)
 	{
 		if(Futile.instance != null && Futile.instance.enabled == true)

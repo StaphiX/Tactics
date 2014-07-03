@@ -4,7 +4,7 @@
    {
       _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
       _Mask ("Culling Mask", 2D) = "white" {}
-      _Cutoff ("Alpha cutoff", Range (0,1)) = 0.1
+      _Cutoff ("Alpha cutoff", Range (0,1)) = 0.0
    }
 
     Category 

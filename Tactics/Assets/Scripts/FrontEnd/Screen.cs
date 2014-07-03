@@ -127,6 +127,11 @@ public class UIElement {
 		
 	}
 
+	public virtual void GUIDisplay()
+	{
+
+	}
+
 	public virtual void UpdateChildren()
 	{
 		if(m_tChildren != null)

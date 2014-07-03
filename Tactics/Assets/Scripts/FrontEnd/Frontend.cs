@@ -18,4 +18,9 @@ public class Frontend : MonoBehaviour {
 		ScreenStack.Update();
 
 	}
+
+	void OnGUI()
+	{
+		ScreenStack.GUIDisplay();
+	}
 }

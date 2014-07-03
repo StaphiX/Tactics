@@ -12,7 +12,10 @@ public class FMaskedSprite : FSprite
 	
 	public FMaskedSprite (string elementName, string maskName) : base(elementName)
 	{
-		_maskElement = Futile.atlasManager.GetElementWithName(maskName);
+		if(maskName.Length <= 0)
+			_maskElement = null;
+		else
+			_maskElement = Futile.atlasManager.GetElementWithName(maskName);
 		shader = FShader.MaskedShader;
 	}
 	
@@ -46,12 +49,13 @@ public class FMaskedSprite : FSprite
 	override public void PopulateRenderLayer()
 	{
 		base.PopulateRenderLayer();
-		if(_isOnStage && _firstFacetIndex != -1) 
+		if(_isOnStage && _firstFacetIndex != -1 && _maskElement != null) 
 		{
 			Vector2[] uv2 = _renderLayer.uvs2;
 			if(uv2.Length != _renderLayer.uvs.Length);
 			{
 				_renderLayer.ExpandUV2();
+				uv2 = _renderLayer.uvs2;
 			}
 			int vertexIndex0 = _firstFacetIndex*4;
 			int vertexIndex1 = vertexIndex0 + 1;
