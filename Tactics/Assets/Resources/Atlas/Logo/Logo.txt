@@ -1,6 +1,6 @@
 {"frames": {
 
-"LOGOcircle":
+"LOGOblank":
 {
 	"frame": {"x":1,"y":1,"w":256,"h":256},
 	"rotated": false,
@@ -8,7 +8,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOcircle2":
+"LOGOcircle":
 {
 	"frame": {"x":1,"y":258,"w":256,"h":256},
 	"rotated": false,
@@ -16,7 +16,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOdiag":
+"LOGOcircle2":
 {
 	"frame": {"x":1,"y":515,"w":256,"h":256},
 	"rotated": false,
@@ -24,7 +24,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOhorse":
+"LOGOdiag":
 {
 	"frame": {"x":258,"y":1,"w":256,"h":256},
 	"rotated": false,
@@ -32,7 +32,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOlion":
+"LOGOhorse":
 {
 	"frame": {"x":258,"y":258,"w":256,"h":256},
 	"rotated": false,
@@ -40,7 +40,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOloop":
+"LOGOlion":
 {
 	"frame": {"x":258,"y":515,"w":256,"h":256},
 	"rotated": false,
@@ -48,7 +48,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOoval":
+"LOGOloop":
 {
 	"frame": {"x":515,"y":1,"w":256,"h":256},
 	"rotated": false,
@@ -56,7 +56,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOshield":
+"LOGOoval":
 {
 	"frame": {"x":515,"y":258,"w":256,"h":256},
 	"rotated": false,
@@ -64,7 +64,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOshield2":
+"LOGOshield":
 {
 	"frame": {"x":515,"y":515,"w":256,"h":256},
 	"rotated": false,
@@ -72,7 +72,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOstar":
+"LOGOshield2":
 {
 	"frame": {"x":772,"y":1,"w":256,"h":256},
 	"rotated": false,
@@ -80,7 +80,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOthreestripe":
+"LOGOstar":
 {
 	"frame": {"x":772,"y":258,"w":256,"h":256},
 	"rotated": false,
@@ -88,7 +88,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOtrident":
+"LOGOthreestripe":
 {
 	"frame": {"x":772,"y":515,"w":256,"h":256},
 	"rotated": false,
@@ -96,9 +96,17 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"LOGOwings":
+"LOGOtrident":
 {
 	"frame": {"x":1029,"y":1,"w":256,"h":256},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
+	"sourceSize": {"w":256,"h":256}
+},
+"LOGOwings":
+{
+	"frame": {"x":1286,"y":1,"w":256,"h":256},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},

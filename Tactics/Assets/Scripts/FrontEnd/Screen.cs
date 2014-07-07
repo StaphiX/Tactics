@@ -160,7 +160,10 @@ public class UIElement {
 			if(m_tSprites == null)
 				m_tSprites = new List<FNode>();
 			m_tSprites.Add(tSprite);
-			Futile.stage.AddChild(tSprite);
+			if(m_tStage != null)
+				m_tStage.AddChild(tSprite);
+			else
+				Futile.stage.AddChild(tSprite);
 		}
 	}
 
@@ -174,15 +177,5 @@ public class UIElement {
 			ScreenStack.tTextStage.AddChild(tLabel);
 		}
 	}
-
-//	public virtual void InitSprites()
-//	{
-//		int iSpriteCount = m_tSprites.Count;
-//		for(int iSprite = 0; iSprite < iSpriteCount; ++iSprite)
-//		{
-//			Futile.stage.AddChild(m_tSprites[iSprite]);
-//		}
-//	}
-
 
 }

@@ -22,12 +22,18 @@ public class InputManager
 		m_tReleasedTouch.Clear(); //Release touches only exist for a frame
 		if(Input.GetMouseButtonUp(0))
 		{
-			AddRelease(Input.mousePosition, 0);
+			float fX = 0;
+			float fY = 0;
+			ConvertMousePosition(Input.mousePosition, out fX, out fY);
+			AddRelease(new Vector2(fX, fY), 0);
 		}
 
 		if(Input.GetMouseButtonDown(0))
 		{
-			AddPress(Input.mousePosition, 0);
+			float fX = 0;
+			float fY = 0;
+			ConvertMousePosition(Input.mousePosition, out fX, out fY);
+			AddPress(new Vector2(fX, fY), 0);
 		}
 	}
 
@@ -82,9 +88,14 @@ public class InputManager
 		return false;
 	}
 
+	public static bool IsReleaseInRectF(Rect tRect)
+	{
+		return IsReleaseInRectF(tRect.x, tRect.y, tRect.width, tRect.height);
+	}
+
 	public static bool IsReleaseInRectF(float fX, float fY, float fW, float fH)
 	{
-		ConvertFutilePosition(new Vector2(fX, fY), out fX, out fY);
+		ConvertFutilePosition(new Vector2(fX, fY), out fX, out fY, fW, fH);
 		ConvertFutileDimensions(new Vector2(fW, fH), out fW, out fH);
 
 		return IsReleaseInRect(fX, fY, fW, fH);
@@ -128,6 +139,17 @@ public class InputManager
 
 	public static void ConvertFutilePosition(Vector2 vPos, out float fX,out float fY)
 	{
+		ConvertFutilePosition(vPos, out fX, out fY, 0, 0);
+	}
+
+	public static void ConvertFutilePosition(Vector2 vPos, out float fX,out float fY, float fW, float fH)
+	{
+		//Futile uses world position offset from center
+		//Offset From top edge instead
+		vPos.y *= -1;
+		//Offset these values by half to compensate for centering
+		vPos.x -= fW/2;
+		vPos.y -= fH/2;
 		vPos = Futile.stage.LocalToScreen(vPos);
 		fX = vPos.x;
 		fY = vPos.y;
@@ -138,7 +160,14 @@ public class InputManager
 		fX = vDim.x;
 		fY = vDim.y;
 	}
-	
+
+	public static void ConvertMousePosition(Vector2 vPos, out float fX,out float fY)
+	{
+		//Mouse uses bottom left as 0,0
+		//Unity uses top left as 0,0
+		fX = vPos.x;
+		fY = vPos.y * -1 + Screen.height;
+	}
 }
 
 public class InputTouch

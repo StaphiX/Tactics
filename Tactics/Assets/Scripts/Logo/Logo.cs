@@ -23,7 +23,6 @@ public class LogoImage {
 
 public class LogoTemplate
 {
-	public bool bUpdate = false;
 	public float fWidth = 256.0f;
 	public LogoLayerTemplate[] tLayers = new LogoLayerTemplate[LogoImage.MAXLAYERS];
 	public int iSeed = 11;
@@ -54,97 +53,6 @@ public class LogoTemplate
 				tLayers[iLayer].tPreviousLayer = tLayers[iLayer-1];
 		}
 	}
-
-	public void AddLogoToScreen(UIScreen tScreen, float fX, float fY)
-	{
-		LogoLayerTemplate tPreviousLayer = null;
-
-		for(int iLayer = 0; iLayer < LogoImage.MAXLAYERS; ++iLayer)
-		{
-			LogoLayerTemplate tLayer = tLayers[iLayer];
-
-			bool bFirst = iLayer == 0;
-			bool bLast = iLayer == LogoImage.MAXLAYERS-1;
-
-			tLayer.tLayer.tColor = new Color(Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f));
-			FMaskedSprite tSprite = new FMaskedSprite(tLayer.GetImage(GetLayerSeed(iLayer)), tLayer.GetMask(GetLayerSeed(iLayer)));
-			tScreen.AddSprite(tSprite);
-			tSprite.width = fWidth;
-			tSprite.height = fWidth;
-			tSprite.SetPosition(fX + tLayer.GetPosition().x,fY + tLayer.GetPosition().y);
-			tSprite.color = tLayer.tLayer.tColor;
-
-			tPreviousLayer = tLayer;
-		}
-	}
-
-	public void DisplayLayer(float fX, float fY)
-	{
-		string[] sFilters = new string[LogoImage.FILTERCOUNT] { "NONE", "FirstLayer", "Background", "LastLayer", "Circular", "Mask" };
-		float fH = 140;
-		float fW = 500;
-
-		for(int iLayer = 0; iLayer < LogoImage.MAXLAYERS; ++iLayer)
-		{
-			Rect tBoxRect = new Rect(fX, fY + iLayer * (fH+5), fW, fH);
-			LogoLayerTemplate tLayer = tLayers[iLayer];
-			GUI.BeginGroup(tBoxRect);
-			GUI.Box(new Rect(0, 0, tBoxRect.width, tBoxRect.height), "");
-			GUI.Label(new Rect(0,0,tBoxRect.width, 20), "Image: " + tLayer.GetImage(GetLayerSeed(iLayer)));
-			GUI.Label(new Rect(0,20,tBoxRect.width, 20), "Mask: " + tLayer.GetMask(GetLayerSeed(iLayer)));
-			GUI.Label(new Rect(tBoxRect.width - 100,20,100, 20), "Layer As Mask");
-			GUI.Label(new Rect(tBoxRect.width - 200,0,100, 20), "Parent Scale");
-			GUI.TextField(new Rect(tBoxRect.width - 100,0,100, 20), tLayer.tLayer.fParentSize.ToString());
-
-			for(int iFilter = 0; iFilter < LogoImage.FILTERCOUNT; ++iFilter)
-			{
-				bool bValue = tLayer.iLayerAsMask == iFilter;
-				if(bValue != GUI.Toggle(new Rect(tBoxRect.width - 50,40+iFilter*20,50, 20),bValue, (iFilter+1).ToString()))
-				{
-					tLayer.iLayerAsMask = iFilter;
-				}
-			}
-
-			for(int iFilter = 0; iFilter < LogoImage.FILTERCOUNT; ++iFilter)
-			{
-				int iLogoType = 0;
-				if(iFilter > 0)
-				{
-					iLogoType = 1 << (iFilter-1);
-				}
-
-				ELogoType eType = tLayer.tPart.eType;
-				bool bCurrentValue = (eType & (ELogoType)iLogoType) != ELogoType.NONE;
-				if(bCurrentValue != GUI.Toggle(new Rect(0 + 100 * (int)(iFilter/5), 40 + (20 * (iFilter % 5)), 200, 20),bCurrentValue, sFilters[iFilter]))
-				{
-					if(!bCurrentValue)
-						eType |= (ELogoType)iLogoType;
-					else
-						eType &= ~(ELogoType)iLogoType;
-
-					tLayer.tPart.eType = eType;
-				}
-			}
-
-			GUI.EndGroup();
-			if(GUI.Button(new Rect(Screen.width-100, 5, 100, 50), "UPDATE"))
-			{
-				bUpdate = true;
-			}
-			try
-			{
-				int iR1 = int.Parse(GUI.TextField(new Rect(Screen.width-200, 5, 100, 20), (tColorPrimary.r*255).ToString()));
-				int iG1 = int.Parse(GUI.TextField(new Rect(Screen.width-300, 5, 100, 20), (tColorPrimary.g*255).ToString()));
-				int iB1 = int.Parse(GUI.TextField(new Rect(Screen.width-400, 5, 100, 20), (tColorPrimary.b*255).ToString()));
-				int iR2 = int.Parse(GUI.TextField(new Rect(Screen.width-200, 25, 100, 20), (tColorSecondary.r*255).ToString()));
-				int iG2 = int.Parse(GUI.TextField(new Rect(Screen.width-300, 25, 100, 20), (tColorSecondary.g*255).ToString()));
-				int iB2 = int.Parse(GUI.TextField(new Rect(Screen.width-400, 25, 100, 20), (tColorSecondary.b*255).ToString()));
-			}
-			catch
-			{
-			}
-		}
-	}
 }
 
 public class LogoLayerTemplate
@@ -160,6 +68,11 @@ public class LogoLayerTemplate
 	public Vector2 GetPosition()
 	{
 		return tLayer.GetPosition();
+	}
+
+	public float GetScale()
+	{
+		return tLayer.GetScale();
 	}
 
 	public string GetRandomPartName(int iSeed)
@@ -199,12 +112,13 @@ public class LogoLayerTemplate
 
 	public string GetMask(int iSeed)
 	{
-		if(tMask.eType == ELogoType.NONE)
-		{
-			return "";
-		}
 		if(tMask.sImageName.Length > 0)
 			return tMask.sImageName;
+
+		if(tMask.eType == ELogoType.NONE)
+		{
+			return "LOGOblank";
+		}
 
 		tMask.sImageName = LogoPart.FindPartOfType(tMask.eType).sImageName;
 		return tMask.sImageName;
@@ -238,6 +152,52 @@ public class LogoLayer
 			fSize *= fParentSize;
 		return fSize;
 	}
+
+	public void SetX(float fMin, float fMax)
+	{
+		if(fMin > fXMax)
+		{
+			fMax = fMin;
+		}
+		if(fMax < fXMin)
+		{
+			fMin = fMax;
+		}
+
+		fXMin = fMin;
+		fXMax = fMax;
+
+	}
+
+	public void SetY(float fMin, float fMax)
+	{
+		if(fMin > fYMax)
+		{
+			fMax = fMin;
+		}
+		if(fMax < fYMin)
+		{
+			fMin = fMax;
+		}
+
+		fYMin = fMin;
+		fYMax = fMax;
+	}
+
+	public void SetSize(float fMin, float fMax)
+	{
+		if(fMin > fSizeMax)
+		{
+			fMax = fMin;
+		}
+		if(fMax < fSizeMin)
+		{
+			fMin = fMax;
+		}
+
+		fSizeMin = fMin;
+		fSizeMax = fMax;
+	}
 }
 
 public class LogoPart
@@ -252,6 +212,7 @@ public class LogoPart
 
 	public static LogoPart[] tLogoPart = new LogoPart[]
 	{
+		new LogoPart("LOGOblank", ELogoType.NONE),
 		new LogoPart("LOGOcircle", ELogoType.Background | ELogoType.FirstLayer | ELogoType.Circular | ELogoType.Mask),
 		new LogoPart("LOGOcircle2", ELogoType.Background | ELogoType.Circular | ELogoType.LastLayer),
 		new LogoPart("LOGOloop", ELogoType.Background | ELogoType.Circular),
