@@ -13,133 +13,127 @@ public enum ELogoType
 	Mask = 			1 << 4,
 }
 
+[System.Flags]
+public enum ELogoColour
+{ 	
+	White = 0,
+	Black =	1 << 0,
+	Primary = 	1 << 1,
+	Secondary = 1 << 2,
+	Gold = 	1 << 3,
+	Grey = 	1 << 4,
+}
+
 public class LogoImage {
 
 	public const int FILTERCOUNT = 6;
 	public const int MAXLAYERS = 5;
-	public float fWidth = 256.0f;
-	public LogoLayer[] tLayers = new LogoLayer[MAXLAYERS];
-}
-
-public class LogoTemplate
-{
-	public float fWidth = 256.0f;
-	public LogoLayerTemplate[] tLayers = new LogoLayerTemplate[LogoImage.MAXLAYERS];
-	public int iSeed = 11;
 	public Color tColorPrimary = Color.white;
 	public Color tColorSecondary = Color.white;
 
-	public LogoLayerTemplate GetLayer(int iIndex)
-	{
-		if(iIndex < LogoImage.MAXLAYERS)
-			return tLayers[iIndex];
-		else 
-			return null;
-	}
-
-	public int GetLayerSeed(int iLayer)
-	{
-		return iSeed = iLayer + 1;
-	}
+	public float fWidth = 256.0f;
+	public LogoLayer[] tLayers = new LogoLayer[MAXLAYERS];
 
 	public void Init()
 	{
-		for(int iLayer = 0; iLayer < LogoImage.MAXLAYERS; ++iLayer)
+		for(int iLayer = 0; iLayer < MAXLAYERS; ++iLayer)
 		{
-			tLayers[iLayer] = new LogoLayerTemplate();
-			tLayers[iLayer].bFirst = iLayer == 0;
-			tLayers[iLayer].bLast = iLayer == LogoImage.MAXLAYERS-1;
-			if(iLayer > 0)
-				tLayers[iLayer].tPreviousLayer = tLayers[iLayer-1];
-		}
-	}
-}
+			tLayers[iLayer] = new LogoLayer();
+			tLayers[iLayer].eColour = iLayer % 2 == 0 ? ELogoColour.Primary : ELogoColour.Secondary;
 
-public class LogoLayerTemplate
-{
-	public LogoPart tPart = new LogoPart("", ELogoType.Background);
-	public LogoPart tMask = new LogoPart("", ELogoType.NONE);
-	public LogoLayer tLayer = new LogoLayer();
-	public int iLayerAsMask = -1;
-	public bool bFirst = false;
-	public bool bLast = false;
-	public LogoLayerTemplate tPreviousLayer = null;
+			if(iLayer <= 0)
+				tLayers[iLayer].eType |= ELogoType.FirstLayer;
+			else
+				tLayers[iLayer].tParent = tLayers[iLayer-1];
+			if(iLayer == MAXLAYERS-1)
+				tLayers[iLayer].eType |= ELogoType.LastLayer;
 
-	public Vector2 GetPosition()
-	{
-		return tLayer.GetPosition();
-	}
-
-	public float GetScale()
-	{
-		return tLayer.GetScale();
-	}
-
-	public string GetRandomPartName(int iSeed)
-	{
-		Random.seed = iSeed;
-
-		if(bFirst)
-			tPart.eType |= ELogoType.FirstLayer;
-		else
-			tPart.eType &= ~ELogoType.FirstLayer;
-		if(bLast)
-			tPart.eType |= ELogoType.LastLayer;
-		else
-			tPart.eType &= ~ELogoType.LastLayer;
-		
-		if(!bFirst && !bLast)
-		{
-			tPart.eType |= ELogoType.Background;
-		}
-		
-		if(!bFirst && !bLast && tPreviousLayer != null)
-		{
-			if((tPreviousLayer.tPart.eType & ELogoType.Circular) != ELogoType.NONE)
-				tPart.eType |= ELogoType.Circular;
-		}
-		
-		return LogoPart.FindPartOfType(tPart.eType).sImageName;
-	}
-
-	public string GetImage(int iSeed)
-	{
-		if(tPart.sImageName.Length > 0)
-			return tPart.sImageName;
-
-		return GetRandomPartName(iSeed);
-	}
-
-	public string GetMask(int iSeed)
-	{
-		if(tMask.sImageName.Length > 0)
-			return tMask.sImageName;
-
-		if(tMask.eType == ELogoType.NONE)
-		{
-			return "LOGOblank";
+			if(iLayer > 0 && iLayer < MAXLAYERS-1)
+				tLayers[iLayer].eType |= ELogoType.Background;
 		}
 
-		tMask.sImageName = LogoPart.FindPartOfType(tMask.eType).sImageName;
-		return tMask.sImageName;
+		SetSeed(11);
+	}
+
+	public Color GetColour(ELogoColour eColour)
+	{
+		switch(eColour)
+		{
+		case ELogoColour.White:
+			return Color.white;
+		case ELogoColour.Black:
+			return Color.black;
+		case ELogoColour.Primary:
+			return tColorPrimary;
+		case ELogoColour.Secondary:
+			return tColorSecondary;
+		case ELogoColour.Gold:
+			return new Color(0.94f, 0.8f, 0.0f);
+		case ELogoColour.Grey:
+			return Color.gray;
+		default:
+			return Color.white;
+		}
+		return Color.white;
+	}
+
+	public void SetSeed(int iSeed)
+	{
+		for(int iLayer = 0; iLayer < MAXLAYERS; ++iLayer)
+		{
+			tLayers[iLayer].iSeed = iSeed + iLayer;
+		}
 	}
 }
 
 public class LogoLayer
 {
+	public int iSeed = 11;
+	public LogoLayer tParent = null;
+	public ELogoColour eColour = ELogoColour.White;
+	public ELogoType eType = ELogoType.NONE;
+	public ELogoType eMaskType = ELogoType.NONE;
 	public string sImage = "";
 	public string sMask = "";
-	public float fParentSize = -1.0f;
 	public float fSizeMin = 1.0f;
 	public float fSizeMax = 1.0f;
 	public float fYMin = 0.0f;
 	public float fYMax = 0.0f;
 	public float fXMin = 0.0f;
 	public float fXMax = 0.0f;
-	public Color tColor = Color.white;
+
+	public string GetImage()
+	{
+		if(sImage.Length > 0)
+			return sImage;
+		
+		return GetRandomPartName();
+	}
+
+	public string GetRandomPartName()
+	{
+		Random.seed = iSeed;
+		
+		return LogoPart.FindPartOfType(eType).sImageName;
+	}
+
+	public string GetMask()
+	{
+		if(sMask.Length > 0)
+			return sMask;
+		
+		if(eMaskType == ELogoType.NONE || (eMaskType & ELogoType.Mask) == ELogoType.NONE)
+		{
+			return "LOGOblank";
+		}
+
+		Random.seed = iSeed;
+		return LogoPart.FindPartOfType(eMaskType).sImageName;
+	}
 
 	public Vector2 GetPosition()
 	{
+		Random.seed = iSeed;
 		Vector2 vPos = new Vector2(Random.Range(fXMin, fXMax), Random.Range(fYMin, fYMax));
 		
 		return vPos;
@@ -147,9 +141,10 @@ public class LogoLayer
 
 	public float GetScale()
 	{
+		Random.seed = iSeed;
 		float fSize = Random.Range(fSizeMin, fSizeMax);
-		if(fParentSize >= 0)
-			fSize *= fParentSize;
+		if(tParent != null)
+			fSize *= tParent.GetScale();
 		return fSize;
 	}
 
@@ -216,7 +211,7 @@ public class LogoPart
 		new LogoPart("LOGOcircle", ELogoType.Background | ELogoType.FirstLayer | ELogoType.Circular | ELogoType.Mask),
 		new LogoPart("LOGOcircle2", ELogoType.Background | ELogoType.Circular | ELogoType.LastLayer),
 		new LogoPart("LOGOloop", ELogoType.Background | ELogoType.Circular),
-		new LogoPart("LOGOdiag", ELogoType.Background | ELogoType.LastLayer | ELogoType.Circular),
+		new LogoPart("LOGOdiag", ELogoType.Background | ELogoType.Circular),
 		new LogoPart("LOGOhorse", ELogoType.LastLayer),
 		new LogoPart("LOGOlion", ELogoType.LastLayer),
 		new LogoPart("LOGOoval", ELogoType.Background | ELogoType.FirstLayer | ELogoType.Circular | ELogoType.Mask),

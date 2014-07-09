@@ -38,7 +38,7 @@ public class LogoEditorScreen : UIScreen {
 
 public class LogoEditor
 {
-	public LogoTemplate tTemplate;
+	public LogoImage tLogoImage;
 	public bool bUpdate = false;
 	int iPage = 0;
 	int iMaxLogos = 10;
@@ -55,8 +55,8 @@ public class LogoEditor
 
 	public LogoEditor(UIScreen _tScreen)
 	{
-		tTemplate = new LogoTemplate();
-		tTemplate.Init();
+		tLogoImage = new LogoImage();
+		tLogoImage.Init();
 		tScreen = _tScreen;
 		AddLogoToScreen(260, 160);
 		AddLogoListToScreen();
@@ -97,31 +97,25 @@ public class LogoEditor
 
 	public void AddLogoToScreen(float fX, float fY)
 	{
-		tTemplate.tColorPrimary = tPrimary;
-		tTemplate.tColorSecondary = tSecondary;
-
-		LogoLayerTemplate tPreviousLayer = null;
+		tLogoImage.tColorPrimary = tPrimary;
+		tLogoImage.tColorSecondary = tSecondary;
 		
 		for(int iLayer = 0; iLayer < LogoImage.MAXLAYERS; ++iLayer)
 		{
-			LogoLayerTemplate tLayer = tTemplate.tLayers[iLayer];
+			LogoLayer tLayer = tLogoImage.tLayers[iLayer];
 			
 			bool bFirst = iLayer == 0;
 			bool bLast = iLayer == LogoImage.MAXLAYERS-1;
-			
-			tLayer.tLayer.tColor = iLayer % 2 == 0 ? tPrimary : tSecondary;
-			FMaskedSprite tSprite = new FMaskedSprite(tLayer.GetImage(tTemplate.GetLayerSeed(iLayer)), tLayer.GetMask(tTemplate.GetLayerSeed(iLayer)));
+
+			FMaskedSprite tSprite = new FMaskedSprite(tLayer.GetImage(), tLayer.GetMask());
 			tScreen.AddSprite(tSprite);
-			Random.seed = tTemplate.GetLayerSeed(iLayer);
-			float fWidth = tTemplate.fWidth * tLayer.GetScale();
+			float fWidth = tLogoImage.fWidth * tLayer.GetScale();
 			tSprite.width = fWidth;
 			tSprite.height = fWidth;
-			float fXOffset = tTemplate.fWidth * tLayer.GetPosition().x;
-			float fYOffset = tTemplate.fWidth * tLayer.GetPosition().y;
+			float fXOffset = tLogoImage.fWidth * tLayer.GetPosition().x;
+			float fYOffset = tLogoImage.fWidth * tLayer.GetPosition().y;
 			tSprite.SetPosition(fX + fXOffset,fY + fYOffset);
-			tSprite.color = tLayer.tLayer.tColor;
-			
-			tPreviousLayer = tLayer;
+			tSprite.color = tLogoImage.GetColour(tLayer.eColour);
 		}
 	}
 
@@ -154,9 +148,9 @@ public class LogoEditor
 	{
 		Rect tImageRect = GetLayerRect(iLayer, false);
 		Rect tMaskRect = GetLayerRect(iLayer, true);
-		LogoLayerTemplate tLayer = tTemplate.tLayers[iLayer];
-		string sImageName = tLayer.GetImage(tTemplate.GetLayerSeed(iLayer));
-		string sMaskName = tLayer.GetMask(tTemplate.GetLayerSeed(iLayer));
+		LogoLayer tLayer = tLogoImage.tLayers[iLayer];
+		string sImageName = tLayer.GetImage();
+		string sMaskName = tLayer.GetMask();
 		Color tImageCol = iLayer == iCurrentLayer && !bSelectMask ? Color.cyan : Color.white;
 		Color tMaskCol = iLayer == iCurrentLayer && bSelectMask ? Color.cyan : Color.white;
 		if(sImageName.Length < 1)
@@ -195,7 +189,7 @@ public class LogoEditor
 
 	public Rect GetLayerPartRect(int iIndex)
 	{
-		float fWidth = tTemplate.fWidth/4;
+		float fWidth = tLogoImage.fWidth/4;
 		return new Rect(-250 + iIndex * (fWidth+5), -200, fWidth, fWidth);
 	}
 
@@ -208,7 +202,40 @@ public class LogoEditor
 		Rect tButtonRect = new Rect(300, Screen.height - 65, Screen.width, 20);
 		for(int iFilter = 0; iFilter < sFilters.Length; ++iFilter)
 		{
-			GUI.Toggle(new Rect(tButtonRect.x+80*iFilter, tButtonRect.y, 100, 20), false, sFilters[iFilter]);
+			bool bToggle = true;
+			if(iFilter > 0)
+				bToggle = ((int)LogoPart.ePartFilter & 1 << (iFilter-1)) != (int)ELogoType.NONE;
+			if(bToggle != GUI.Toggle(new Rect(tButtonRect.x+80*iFilter, tButtonRect.y, 50, 20), bToggle, sFilters[iFilter]))
+			{
+				bToggle = !bToggle;
+				int iType = 0;
+				if(iFilter > 0)
+					iType = 1 << (iFilter-1);
+				if(bToggle)
+					LogoPart.ePartFilter |= (ELogoType)iType;
+				else
+					LogoPart.ePartFilter &= ~(ELogoType)iType;
+
+				iPage = 0;
+				bUpdate = true;
+			}
+		}
+		if(GUI.Button(new Rect(tButtonRect.x, tButtonRect.y+20, 150, 20), "Set Random Layer"))
+		{
+			if(iCurrentLayer > -1)
+			{
+				if(!bSelectMask)
+				{
+					tLogoImage.tLayers[iCurrentLayer].sImage = "";
+					tLogoImage.tLayers[iCurrentLayer].eType = LogoPart.ePartFilter;
+				}
+				else
+				{
+					tLogoImage.tLayers[iCurrentLayer].sMask = "";
+					tLogoImage.tLayers[iCurrentLayer].eMaskType = LogoPart.ePartFilter;
+				}
+				bUpdate = true;
+			}
 		}
 
 		if(iCurrentLayer > -1)
@@ -218,31 +245,27 @@ public class LogoEditor
 			InputManager.ConvertFutilePosition(new Vector2(tRect.x, tRect.y), out fRectX, out fRectY);
 			tRect.x = fRectX + 60;
 			tRect.y = fRectY;
+			tRect.width = 100;
 			tRect.height = 15;
-			float fXMin = tTemplate.tLayers[iCurrentLayer].tLayer.fXMin;
+			LogoLayer tLayer = tLogoImage.tLayers[iCurrentLayer];
+			float fXMin = tLayer.fXMin;
 			fXMin = GUI.HorizontalSlider(tRect, fXMin, -1.0f, 1.0f);
-			float fXMax = tTemplate.tLayers[iCurrentLayer].tLayer.fXMax;
+			float fXMax = tLayer.fXMax;
 			tRect.y += 15;
 			fXMax = GUI.HorizontalSlider(tRect, fXMax, -1.0f, 1.0f);
 			tRect.y += 30;
-			tRect.height = 45;
-			tRect.width = 15;
-			float fYMin = tTemplate.tLayers[iCurrentLayer].tLayer.fYMin;
-			fYMin = GUI.VerticalSlider(tRect, fYMin, -1.0f, 1.0f);
-			tRect.x += 15;
-			float fYMax = tTemplate.tLayers[iCurrentLayer].tLayer.fYMax;
-			fYMax = GUI.VerticalSlider(tRect, fYMax, -1.0f, 1.0f);
-			tRect.x -= 15;
-			tRect.y += 80;
-			tRect.height = 15;
-			tRect.width = 45;
-			float fSizeMin = tTemplate.tLayers[iCurrentLayer].tLayer.fSizeMin;
-			fSizeMin = GUI.HorizontalSlider(tRect, fSizeMin, 0.0f, 1.0f);
+			float fYMin = tLayer.fYMin;
+			fYMin = GUI.HorizontalSlider(tRect, fYMin, -1.0f, 1.0f);
 			tRect.y += 15;
-			float fSizeMax = tTemplate.tLayers[iCurrentLayer].tLayer.fSizeMax;
-			fSizeMax = GUI.HorizontalSlider(tRect, fSizeMax, 0.0f, 1.0f);
+			float fYMax = tLayer.fYMax;
+			fYMax = GUI.HorizontalSlider(tRect, fYMax, -1.0f, 1.0f);
+			tRect.y += 30;
+			float fSizeMin = tLayer.fSizeMin;
+			fSizeMin = GUI.HorizontalSlider(tRect, fSizeMin, 0.0f, 2.0f);
+			tRect.y += 15;
+			float fSizeMax = tLayer.fSizeMax;
+			fSizeMax = GUI.HorizontalSlider(tRect, fSizeMax, 0.0f, 2.0f);
 
-			LogoLayer tLayer = tTemplate.tLayers[iCurrentLayer].tLayer;
 			if(tLayer.fXMin != fXMin || tLayer.fXMax != fXMax)
 			{
 				tLayer.SetX(fXMin, fXMax);
@@ -335,14 +358,15 @@ public class LogoEditor
 	{
 		if(iCurrentSelection > -1 && iCurrentLayer > -1)
 		{
-			string sPart = LogoPart.tLogoPart[iCurrentSelection].sImageName;
+			List<LogoPart> tParts = LogoPart.GetPartList(LogoPart.ePartFilter);
+			string sPart = tParts[iCurrentSelection].sImageName;
 			if(!bSelectMask)
 			{
-				tTemplate.tLayers[iCurrentLayer].tPart.sImageName = sPart;
+				tLogoImage.tLayers[iCurrentLayer].sImage = sPart;
 			}
 			else
 			{
-				tTemplate.tLayers[iCurrentLayer].tMask.sImageName = sPart;
+				tLogoImage.tLayers[iCurrentLayer].sMask = sPart;
 			}
 
 			iCurrentSelection = -1;
